@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { coffeeBeans } from "@/db/schema";
-import { daysSinceRoast } from "@/lib/beans";
+import { daysSinceRoast, LOW_STOCK_G } from "@/lib/beans";
 import { requireUserId } from "@/lib/session";
 
 export default async function BeansPage() {
@@ -55,8 +55,21 @@ export default async function BeansPage() {
               <li key={bean.id}>
                 <Card className="h-full transition-shadow duration-200 hover:shadow-lg hover:shadow-black/5">
                   <CardHeader>
-                    <CardTitle className="font-display text-lg tracking-tight">
-                      {bean.name}
+                    <CardTitle className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="font-display text-lg tracking-tight">{bean.name}</span>
+                      {bean.stockG !== null && (
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 font-mono text-xs tabular-nums ${
+                            Number(bean.stockG) <= 0
+                              ? "bg-destructive/10 text-destructive"
+                              : Number(bean.stockG) < LOW_STOCK_G
+                                ? "bg-star/15 text-star"
+                                : "bg-secondary text-secondary-foreground"
+                          }`}
+                        >
+                          {Number(bean.stockG) <= 0 ? "bitti" : `${bean.stockG} g`}
+                        </span>
+                      )}
                     </CardTitle>
                     {origin && <p className="text-muted-foreground text-sm">{origin}</p>}
                   </CardHeader>
@@ -89,6 +102,7 @@ export default async function BeansPage() {
                               roastDate: bean.roastDate,
                               roaster: bean.roaster,
                               notes: bean.notes,
+                              stockG: bean.stockG,
                             }}
                             submitLabel="Kaydet"
                           />

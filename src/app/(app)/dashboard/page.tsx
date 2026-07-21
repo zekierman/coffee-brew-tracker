@@ -1,22 +1,24 @@
-import { and, desc, eq, gte, ilike, type SQL } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, sql, type SQL } from "drizzle-orm";
 import {
   CircleGauge,
   CoffeeIcon,
   Filter,
   Pencil,
   PlusCircle,
+  RotateCcw,
   SlidersHorizontal,
+  Star,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { deleteBrew } from "@/app/actions/brews";
+import { deleteBrew, toggleFavorite } from "@/app/actions/brews";
 import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { db } from "@/db";
-import { brews } from "@/db/schema";
+import { brews, coffeeBeans, tastingNotes } from "@/db/schema";
 import { brewRatio, formatBrewTime } from "@/lib/brews";
 import { loadBrewOptions } from "@/lib/brew-options";
 import { requireUserId } from "@/lib/session";
@@ -38,12 +40,36 @@ export default async function DashboardPage({
   const beanFilter = first(params.bean);
   const methodFilter = first(params.method);
   const ratingFilter = Number(first(params.rating)) || 0;
+  const query = first(params.q).trim();
+  const tagFilter = first(params.tag).trim().toLocaleLowerCase("tr");
+  const favoritesOnly = first(params.fav) === "1";
 
   // userId kosulu her zaman ilk sirada; filtreler sadece ustune biner.
   const conditions: SQL[] = [eq(brews.userId, userId)];
   if (beanFilter) conditions.push(eq(brews.beanId, beanFilter));
   if (methodFilter) conditions.push(ilike(brews.method, `%${methodFilter}%`));
   if (ratingFilter >= 1 && ratingFilter <= 5) conditions.push(gte(brews.rating, ratingFilter));
+  if (favoritesOnly) conditions.push(eq(brews.isFavorite, true));
+  if (tagFilter) conditions.push(sql`${brews.tags} @> ARRAY[${tagFilter}]::text[]`);
+
+  if (query) {
+    // ponytail: tsvector yerine ilike -- kisisel bir gunlukte kayit sayisi
+    // birkac bini gecmez, indeks karmasikligina degmiyor.
+    const like = `%${query}%`;
+    const notes = tastingNotes;
+    conditions.push(
+      sql`(
+        ${brews.method} ilike ${like}
+        or exists (select 1 from ${coffeeBeans} b where b.id = ${brews.beanId} and b.name ilike ${like})
+        or exists (
+          select 1 from ${notes} n where n.brew_id = ${brews.id} and (
+            n.aroma ilike ${like} or n.flavor ilike ${like} or n.acidity ilike ${like}
+            or n.body ilike ${like} or n.sweetness ilike ${like} or n.aftertaste ilike ${like}
+          )
+        )
+      )`,
+    );
+  }
 
   const [rows, { beans }] = await Promise.all([
     db.query.brews.findMany({
@@ -55,7 +81,9 @@ export default async function DashboardPage({
     loadBrewOptions(userId),
   ]);
 
-  const isFiltered = Boolean(beanFilter || methodFilter || ratingFilter);
+  const isFiltered = Boolean(
+    beanFilter || methodFilter || ratingFilter || query || tagFilter || favoritesOnly,
+  );
 
   return (
     <div className="space-y-6">
@@ -81,6 +109,17 @@ export default async function DashboardPage({
         </CardHeader>
         <CardContent>
           <form method="get" className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-4">
+              <Label htmlFor="q">Ara</Label>
+              <Input
+                id="q"
+                name="q"
+                type="search"
+                defaultValue={query}
+                placeholder="Tadım notu, çekirdek adı, yöntem..."
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="bean">Çekirdek</Label>
               <select id="bean" name="bean" defaultValue={beanFilter} className={selectClass}>
@@ -115,7 +154,23 @@ export default async function DashboardPage({
               </select>
             </div>
 
-            <div className="flex gap-2">
+            {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="hover:bg-secondary/60 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 text-sm transition-colors duration-200">
+                <input
+                  type="checkbox"
+                  name="fav"
+                  value="1"
+                  defaultChecked={favoritesOnly}
+                  className="peer sr-only"
+                />
+                <Star
+                  className="text-muted-foreground/50 peer-checked:fill-star peer-checked:text-star size-4"
+                  aria-hidden
+                />
+                Favoriler
+              </label>
               <Button type="submit">
                 <Filter className="size-4" aria-hidden />
                 Uygula
@@ -226,15 +281,50 @@ export default async function DashboardPage({
                       </dl>
                     )}
 
-                    <div className="flex items-center gap-2 pt-1">
+                    {brew.tags && brew.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {brew.tags.map((tag) => (
+                          <Link
+                            key={tag}
+                            href={`/dashboard?tag=${encodeURIComponent(tag)}`}
+                            className="bg-secondary text-secondary-foreground hover:bg-secondary/70 rounded-full px-2.5 py-0.5 text-xs transition-colors duration-200"
+                          >
+                            #{tag}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <Link
+                        href={`/brews/new?from=${brew.id}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        <RotateCcw className="size-3.5" aria-hidden />
+                        Tekrar demle
+                      </Link>
                       <Link
                         href={`/brews/${brew.id}`}
-                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                        className={buttonVariants({ variant: "ghost", size: "sm" })}
                       >
                         <Pencil className="size-3.5" aria-hidden />
                         Düzenle
                       </Link>
-                      <form action={deleteBrew}>
+                      <form action={toggleFavorite}>
+                        <input type="hidden" name="id" value={brew.id} />
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="sm"
+                          aria-label={brew.isFavorite ? "Favoriden çıkar" : "Favorilere ekle"}
+                        >
+                          <Star
+                            className={`size-3.5 ${brew.isFavorite ? "fill-star text-star" : ""}`}
+                            aria-hidden
+                          />
+                        </Button>
+                      </form>
+                      <form action={deleteBrew} className="ml-auto">
                         <input type="hidden" name="id" value={brew.id} />
                         <Button type="submit" variant="ghost" size="sm">
                           <Trash2 className="size-3.5" aria-hidden />

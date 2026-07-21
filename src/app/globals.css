@@ -73,9 +73,11 @@
   --input: #ddcdb8;
   --ring: #92400e;
   --star: #b45309;
+  /* Grafik renkleri validate_palette.js ile dogrulandi (light: L 0.43-0.77
+     bandi, kroma tabani, CVD ayrimi, zemine kontrast -- hepsi gecti). */
   --chart-1: #92400e;
-  --chart-2: #b45309;
-  --chart-3: #4f46e5;
+  --chart-2: #4f46e5;
+  --chart-3: #b45309;
   --chart-4: #a16207;
   --chart-5: #78716c;
   --radius: 0.75rem;
@@ -110,9 +112,11 @@
     --input: #ffffff2b;
     --ring: #e0a458;
     --star: #f0b860;
-    --chart-1: #e0a458;
-    --chart-2: #f0b860;
-    --chart-3: #a5b4fc;
+    /* Karanlik mod grafik renkleri ayri secildi (isik modunun cevrilmis hali
+       degil): L 0.48-0.67 bandina oturuyor, hepsi dogrulayicidan gecti. */
+    --chart-1: #b87a33;
+    --chart-2: #6f79db;
+    --chart-3: #b0703f;
     --chart-4: #d3b58a;
     --chart-5: #b3a597;
     --sidebar: #17130f;

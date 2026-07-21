@@ -63,6 +63,22 @@ export function BeanForm({ id, defaults, submitLabel }: Props) {
         />
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor={`stockG-${suffix}`}>Stok (g)</Label>
+        <Input
+          id={`stockG-${suffix}`}
+          name="stockG"
+          type="number"
+          className="font-mono tabular-nums"
+          step="1"
+          min={0}
+          inputMode="decimal"
+          defaultValue={defaults?.stockG ?? ""}
+          placeholder="250"
+        />
+        <p className="text-muted-foreground text-xs">Her demlemede doz kadar düşülür.</p>
+      </div>
+
       <div className="space-y-2 sm:col-span-2 lg:col-span-3">
         <Label htmlFor={`notes-${suffix}`}>Not</Label>
         <Textarea

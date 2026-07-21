@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   check,
   date,
   integer,
@@ -55,6 +56,9 @@ export const coffeeBeans = pgTable("coffee_beans", {
   roastDate: date("roast_date"),
   roaster: text("roaster"),
   notes: text("notes"),
+  // Kalan stok; her demlemede doz kadar dusulur.
+  stockG: numeric("stock_g", { precision: 7, scale: 1 }),
+  photoPath: text("photo_path"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -75,11 +79,34 @@ export const brews = pgTable(
     brewTimeSeconds: integer("brew_time_seconds"),
     method: text("method"),
     rating: integer("rating"),
+    isFavorite: boolean("is_favorite").notNull().default(false),
+    // ponytail: etiketler icin ayri tablo yerine Postgres text[]; tek kullanicilik
+    // bir gunlukte etiket sayisi az, join'e degmiyor.
+    tags: text("tags").array(),
+    photoPath: text("photo_path"),
     brewedAt: timestamp("brewed_at", { withTimezone: true }).notNull().defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [check("rating_range", sql`${table.rating} between 1 and 5`)],
 );
+
+/** Kayitli tarif: yeni demleme formunu on doldurmak icin. */
+export const recipes = pgTable("recipes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  method: text("method"),
+  grinderId: uuid("grinder_id").references(() => equipment.id, { onDelete: "set null" }),
+  dripperId: uuid("dripper_id").references(() => equipment.id, { onDelete: "set null" }),
+  grindClicks: integer("grind_clicks"),
+  waterTempC: numeric("water_temp_c", { precision: 4, scale: 1 }),
+  doseG: numeric("dose_g", { precision: 5, scale: 1 }),
+  waterG: numeric("water_g", { precision: 6, scale: 1 }),
+  brewTimeSeconds: integer("brew_time_seconds"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const tastingNotes = pgTable("tasting_notes", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -93,6 +120,18 @@ export const tastingNotes = pgTable("tasting_notes", {
   body: text("body"),
   sweetness: text("sweetness"),
   aftertaste: text("aftertaste"),
+  // SCA cupping formu: her kategori 6-10 arasi, 0.25 adimlarla. Opsiyonel --
+  // serbest metin notlari tek basina da yeterli.
+  scaFragrance: numeric("sca_fragrance", { precision: 4, scale: 2 }),
+  scaFlavor: numeric("sca_flavor", { precision: 4, scale: 2 }),
+  scaAftertaste: numeric("sca_aftertaste", { precision: 4, scale: 2 }),
+  scaAcidity: numeric("sca_acidity", { precision: 4, scale: 2 }),
+  scaBody: numeric("sca_body", { precision: 4, scale: 2 }),
+  scaBalance: numeric("sca_balance", { precision: 4, scale: 2 }),
+  scaUniformity: numeric("sca_uniformity", { precision: 4, scale: 2 }),
+  scaCleanCup: numeric("sca_clean_cup", { precision: 4, scale: 2 }),
+  scaSweetness: numeric("sca_sweetness", { precision: 4, scale: 2 }),
+  scaOverall: numeric("sca_overall", { precision: 4, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -100,6 +139,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   equipment: many(equipment),
   coffeeBeans: many(coffeeBeans),
   brews: many(brews),
+  recipes: many(recipes),
+}));
+
+export const recipesRelations = relations(recipes, ({ one }) => ({
+  user: one(users, { fields: [recipes.userId], references: [users.id] }),
+  grinder: one(equipment, { fields: [recipes.grinderId], references: [equipment.id] }),
+  dripper: one(equipment, { fields: [recipes.dripperId], references: [equipment.id] }),
 }));
 
 export const equipmentRelations = relations(equipment, ({ one }) => ({

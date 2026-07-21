@@ -8,7 +8,11 @@ export type BeanInput = {
   roastDate: string | null;
   roaster: string | null;
   notes: string | null;
+  stockG: string | null;
 };
+
+/** Stok bu gramin altina dusunce uyarilir (yaklasik 3 demleme). */
+export const LOW_STOCK_G = 50;
 
 export type ParseResult = { ok: true; value: BeanInput } | { ok: false; error: string };
 
@@ -30,6 +34,16 @@ export function parseBeanForm(formData: FormData): ParseResult {
     return { ok: false, error: "Kavurma tarihi geçersiz." };
   }
 
+  const rawStock = optional(formData.get("stockG"));
+  let stockG: string | null = null;
+  if (rawStock !== null) {
+    const parsed = Number(rawStock.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 99999) {
+      return { ok: false, error: "Stok 0-99999 g aralığında olmalı." };
+    }
+    stockG = String(parsed);
+  }
+
   return {
     ok: true,
     value: {
@@ -42,6 +56,7 @@ export function parseBeanForm(formData: FormData): ParseResult {
       roastDate,
       roaster: optional(formData.get("roaster")),
       notes: optional(formData.get("notes")),
+      stockG,
     },
   };
 }

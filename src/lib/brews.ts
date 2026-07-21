@@ -9,8 +9,26 @@ export type BrewInput = {
   brewTimeSeconds: number | null;
   method: string | null;
   rating: number | null;
+  isFavorite: boolean;
+  tags: string[] | null;
   brewedAt: Date;
 };
+
+/** SCA cupping formu kategorileri (her biri 6-10, 0.25 adim). */
+export const SCA_FIELDS = [
+  { name: "scaFragrance", label: "Koku" },
+  { name: "scaFlavor", label: "Tat" },
+  { name: "scaAftertaste", label: "Bitiş" },
+  { name: "scaAcidity", label: "Asitlik" },
+  { name: "scaBody", label: "Gövde" },
+  { name: "scaBalance", label: "Denge" },
+  { name: "scaUniformity", label: "Tekdüzelik" },
+  { name: "scaCleanCup", label: "Temiz fincan" },
+  { name: "scaSweetness", label: "Tatlılık" },
+  { name: "scaOverall", label: "Genel" },
+] as const;
+
+export type ScaField = (typeof SCA_FIELDS)[number]["name"];
 
 export type TastingNoteInput = {
   aroma: string | null;
@@ -19,7 +37,14 @@ export type TastingNoteInput = {
   body: string | null;
   sweetness: string | null;
   aftertaste: string | null;
-};
+} & Record<ScaField, string | null>;
+
+/** SCA toplam puani: 10 kategorinin toplami (max 100). Eksik alan varsa null. */
+export function scaTotal(note: Partial<Record<ScaField, string | null>>): number | null {
+  const values = SCA_FIELDS.map(({ name }) => note[name]);
+  if (values.some((v) => v === null || v === undefined || v === "")) return null;
+  return values.reduce((sum, v) => sum + Number(v), 0);
+}
 
 export type ParseResult =
   | { ok: true; brew: BrewInput; note: TastingNoteInput; hasNote: boolean }
@@ -105,14 +130,20 @@ export function parseBrewForm(formData: FormData): ParseResult {
     return { ok: false, error: "Demleme tarihi geçersiz." };
   }
 
-  const note: TastingNoteInput = {
+  const note = {
     aroma: optional(formData.get("aroma")),
     flavor: optional(formData.get("flavor")),
     acidity: optional(formData.get("acidity")),
     body: optional(formData.get("body")),
     sweetness: optional(formData.get("sweetness")),
     aftertaste: optional(formData.get("aftertaste")),
-  };
+  } as TastingNoteInput;
+
+  for (const { name, label } of SCA_FIELDS) {
+    const parsed = numberInRange(formData.get(name), { min: 6, max: 10, label: `SCA ${label}` });
+    if (!parsed.ok) return parsed;
+    note[name] = parsed.value === null ? null : String(parsed.value);
+  }
 
   return {
     ok: true,
@@ -128,11 +159,27 @@ export function parseBrewForm(formData: FormData): ParseResult {
       brewTimeSeconds: time.value,
       method: optional(formData.get("method")),
       rating: rating.value,
+      isFavorite: formData.get("isFavorite") === "on",
+      tags: parseTags(formData.get("tags")),
       brewedAt,
     },
     note,
     hasNote: Object.values(note).some((field) => field !== null),
   };
+}
+
+/** "sabah, deneme , sabah" -> ["sabah", "deneme"] (kirpilmis, tekrarsiz, kucuk harf). */
+export function parseTags(raw: FormDataEntryValue | null): string[] | null {
+  if (typeof raw !== "string" || !raw.trim()) return null;
+  const tags = [
+    ...new Set(
+      raw
+        .split(",")
+        .map((tag) => tag.trim().toLocaleLowerCase("tr"))
+        .filter(Boolean),
+    ),
+  ];
+  return tags.length ? tags.slice(0, 12) : null;
 }
 
 /** Kahve:su oranini "1:16" biciminde verir. */

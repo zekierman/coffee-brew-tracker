@@ -1,12 +1,14 @@
 "use client";
 
-import { Bean, CircleGauge, PlusCircle, Wrench } from "lucide-react";
+import { BarChart3, Bean, BookMarked, CircleGauge, PlusCircle, Wrench } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/dashboard", label: "Demlemeler", Icon: CircleGauge },
-  { href: "/brews/new", label: "Yeni demleme", Icon: PlusCircle },
+  { href: "/brews/new", label: "Yeni", Icon: PlusCircle },
+  { href: "/stats", label: "İstatistik", Icon: BarChart3 },
+  { href: "/recipes", label: "Tarifler", Icon: BookMarked },
   { href: "/beans", label: "Çekirdekler", Icon: Bean },
   { href: "/equipment", label: "Ekipman", Icon: Wrench },
 ] as const;

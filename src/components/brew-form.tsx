@@ -1,13 +1,15 @@
 "use client";
 
-import { Bean, NotebookPen, SlidersHorizontal } from "lucide-react";
-import { useActionState } from "react";
+import { Bean, ClipboardList, NotebookPen, SlidersHorizontal, Star } from "lucide-react";
+import { useActionState, useState } from "react";
 import { saveBrew, type FormState } from "@/app/actions/brews";
+import { BrewTimer } from "@/components/brew-timer";
 import { StarRating } from "@/components/star-rating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SCA_FIELDS, scaTotal, type ScaField } from "@/lib/brews";
 
 export type BrewDefaults = {
   beanId: string | null;
@@ -20,15 +22,19 @@ export type BrewDefaults = {
   brewTimeSeconds: number | null;
   method: string | null;
   rating: number | null;
+  isFavorite: boolean;
+  tags: string[] | null;
   brewedAt: Date;
-  note: {
-    aroma: string | null;
-    flavor: string | null;
-    acidity: string | null;
-    body: string | null;
-    sweetness: string | null;
-    aftertaste: string | null;
-  } | null;
+  note:
+    | ({
+        aroma: string | null;
+        flavor: string | null;
+        acidity: string | null;
+        body: string | null;
+        sweetness: string | null;
+        aftertaste: string | null;
+      } & Partial<Record<ScaField, string | null>>)
+    | null;
 };
 
 type Option = { id: string; name: string };
@@ -69,13 +75,77 @@ function SectionTitle({ Icon, children }: { Icon: typeof Bean; children: React.R
   );
 }
 
+/**
+ * SCA cupping formu. Varsayilan olarak kapali: serbest metin notlari cogu
+ * demleme icin yeterli, bu bolum resmi puanlama isteyene.
+ */
+function ScaSection({ defaults }: { defaults: BrewDefaults["note"] }) {
+  const [scores, setScores] = useState<Partial<Record<ScaField, string>>>(
+    () =>
+      Object.fromEntries(
+        SCA_FIELDS.map(({ name }) => [name, defaults?.[name] ?? ""]),
+      ) as Partial<Record<ScaField, string>>,
+  );
+
+  const total = scaTotal(scores);
+  const hasAny = SCA_FIELDS.some(({ name }) => scores[name]);
+
+  return (
+    <details open={hasAny} className="space-y-4">
+      <summary className="flex items-center gap-2 border-b pb-2 text-sm font-medium">
+        <ClipboardList className="text-primary size-4" aria-hidden />
+        SCA cupping puanı
+        <span className="text-muted-foreground font-normal">(isteğe bağlı)</span>
+        {total !== null && (
+          <span className="text-primary ml-auto font-mono tabular-nums">{total.toFixed(2)} / 100</span>
+        )}
+      </summary>
+
+      <div className="grid gap-4 pt-4 sm:grid-cols-3 lg:grid-cols-5">
+        {SCA_FIELDS.map(({ name, label }) => (
+          <div key={name} className="space-y-2">
+            <Label htmlFor={name}>{label}</Label>
+            <Input
+              id={name}
+              name={name}
+              type="number"
+              className="font-mono tabular-nums"
+              step="0.25"
+              min={6}
+              max={10}
+              inputMode="decimal"
+              value={scores[name] ?? ""}
+              onChange={(e) => setScores((prev) => ({ ...prev, [name]: e.target.value }))}
+              placeholder="8.25"
+            />
+          </div>
+        ))}
+      </div>
+      <p className="text-muted-foreground pt-2 text-xs">
+        Her kategori 6-10 arası, 0,25 adımlarla. Onu da doldurunca toplam hesaplanır.
+      </p>
+    </details>
+  );
+}
+
 export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(saveBrew, null);
   const totalSeconds = defaults?.brewTimeSeconds ?? null;
 
+  // Zamanlayici bu alanlari doldurdugu icin kontrollu tutuluyor.
+  const [minutes, setMinutes] = useState(totalSeconds === null ? "" : String(Math.floor(totalSeconds / 60)));
+  const [seconds, setSeconds] = useState(totalSeconds === null ? "" : String(totalSeconds % 60));
+
   return (
     <form action={formAction} className="space-y-8">
       {id && <input type="hidden" name="id" value={id} />}
+
+      <BrewTimer
+        onStop={(total) => {
+          setMinutes(String(Math.floor(total / 60)));
+          setSeconds(String(total % 60));
+        }}
+      />
 
       <section className="space-y-4">
         <SectionTitle Icon={Bean}>Kahve ve ekipman</SectionTitle>
@@ -213,11 +283,12 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                 min={0}
                 max={59}
                 inputMode="numeric"
-                defaultValue={totalSeconds === null ? "" : Math.floor(totalSeconds / 60)}
+                value={minutes}
+                onChange={(e) => setMinutes(e.target.value)}
                 placeholder="2"
                 aria-label="Dakika"
               />
-              <span className="text-sm text-muted-foreground">dk</span>
+              <span className="text-muted-foreground text-sm">dk</span>
               <Input
                 name="brewSeconds"
                 type="number"
@@ -225,11 +296,12 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                 min={0}
                 max={59}
                 inputMode="numeric"
-                defaultValue={totalSeconds === null ? "" : totalSeconds % 60}
+                value={seconds}
+                onChange={(e) => setSeconds(e.target.value)}
                 placeholder="35"
                 aria-label="Saniye"
               />
-              <span className="text-sm text-muted-foreground">sn</span>
+              <span className="text-muted-foreground text-sm">sn</span>
             </div>
           </div>
 
@@ -246,6 +318,32 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
           <div className="space-y-2">
             <Label>Puan</Label>
             <StarRating name="rating" defaultValue={defaults?.rating} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="tags">Etiketler</Label>
+            <Input
+              id="tags"
+              name="tags"
+              defaultValue={defaults?.tags?.join(", ") ?? ""}
+              placeholder="sabah, deneme"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <label className="hover:bg-secondary/60 inline-flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-200">
+              <input
+                type="checkbox"
+                name="isFavorite"
+                defaultChecked={defaults?.isFavorite}
+                className="peer sr-only"
+              />
+              <Star
+                className="text-muted-foreground/50 peer-checked:fill-star peer-checked:text-star size-5"
+                aria-hidden
+              />
+              Favori
+            </label>
           </div>
         </div>
       </section>
@@ -268,8 +366,10 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
         </div>
       </section>
 
+      <ScaSection defaults={defaults?.note ?? null} />
+
       {state?.error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-destructive text-sm">
           {state.error}
         </p>
       )}

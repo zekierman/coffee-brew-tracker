@@ -45,17 +45,10 @@ export default async function EditBrewPage({ params }: { params: Promise<{ id: s
               brewTimeSeconds: brew.brewTimeSeconds,
               method: brew.method,
               rating: brew.rating,
+              isFavorite: brew.isFavorite,
+              tags: brew.tags,
               brewedAt: brew.brewedAt,
-              note: brew.tastingNote
-                ? {
-                    aroma: brew.tastingNote.aroma,
-                    flavor: brew.tastingNote.flavor,
-                    acidity: brew.tastingNote.acidity,
-                    body: brew.tastingNote.body,
-                    sweetness: brew.tastingNote.sweetness,
-                    aftertaste: brew.tastingNote.aftertaste,
-                  }
-                : null,
+              note: brew.tastingNote,
             }}
           />
         </CardContent>
