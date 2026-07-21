@@ -1,6 +1,16 @@
 import { and, desc, eq, gte, ilike, type SQL } from "drizzle-orm";
+import {
+  CircleGauge,
+  CoffeeIcon,
+  Filter,
+  Pencil,
+  PlusCircle,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { deleteBrew } from "@/app/actions/brews";
+import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,22 +59,27 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Demlemeler</h1>
-          <p className="text-muted-foreground">
-            {rows.length} kayıt{isFiltered && " (filtreli)"}
-          </p>
-        </div>
-        <Link href="/brews/new" className={buttonVariants()}>
+      <PageHeader
+        Icon={CircleGauge}
+        title="Demlemeler"
+        description={`${rows.length} kayıt${isFiltered ? " · filtreli" : ""}`}
+      >
+        <Link href="/brews/new" className={buttonVariants({ size: "lg" })}>
+          <PlusCircle className="size-4" aria-hidden />
           Yeni demleme
         </Link>
-      </div>
+      </PageHeader>
 
       {/* ponytail: filtreler native GET formu — durum URL'de, client state yok,
           sonuc paylasilabilir/yer imlenebilir. */}
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+            <SlidersHorizontal className="size-4" aria-hidden />
+            Filtrele
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <form method="get" className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <Label htmlFor="bean">Çekirdek</Label>
@@ -101,7 +116,10 @@ export default async function DashboardPage({
             </div>
 
             <div className="flex gap-2">
-              <Button type="submit">Filtrele</Button>
+              <Button type="submit">
+                <Filter className="size-4" aria-hidden />
+                Uygula
+              </Button>
               {isFiltered && (
                 <Link href="/dashboard" className={buttonVariants({ variant: "outline" })}>
                   Temizle
@@ -113,9 +131,19 @@ export default async function DashboardPage({
       </Card>
 
       {rows.length === 0 ? (
-        <p className="text-muted-foreground">
-          {isFiltered ? "Filtreye uyan demleme yok." : "Henüz demleme kaydetmedin."}
-        </p>
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+            <CoffeeIcon className="text-muted-foreground/50 size-10" aria-hidden />
+            <p className="text-muted-foreground">
+              {isFiltered ? "Filtreye uyan demleme yok." : "Henüz demleme kaydetmedin."}
+            </p>
+            {!isFiltered && (
+              <Link href="/brews/new" className={buttonVariants({ variant: "outline" })}>
+                İlk demlemeni kaydet
+              </Link>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2">
           {rows.map((brew) => {
@@ -140,20 +168,25 @@ export default async function DashboardPage({
 
             return (
               <li key={brew.id}>
-                <Card className="h-full">
+                <Card className="hover:ring-primary/25 h-full transition-shadow duration-200 hover:shadow-lg hover:shadow-black/5">
                   <CardHeader>
                     <CardTitle className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span>{brew.bean?.name ?? brew.method ?? "Demleme"}</span>
+                      <span className="font-display text-lg tracking-tight">
+                        {brew.bean?.name ?? brew.method ?? "Demleme"}
+                      </span>
                       {brew.rating !== null && (
-                        <span className="text-sm font-normal text-amber-500" title={`${brew.rating}/5`}>
+                        <span
+                          className="text-star text-sm font-normal"
+                          aria-label={`${brew.rating} / 5 puan`}
+                        >
                           {"★".repeat(brew.rating)}
-                          <span className="text-muted-foreground/40">
+                          <span className="text-muted-foreground/30" aria-hidden>
                             {"★".repeat(5 - brew.rating)}
                           </span>
                         </span>
                       )}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {brew.brewedAt.toLocaleString("tr-TR", {
                         dateStyle: "medium",
                         timeStyle: "short",
@@ -162,13 +195,13 @@ export default async function DashboardPage({
                     </p>
                   </CardHeader>
 
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-4">
                     {params.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {params.map((item) => (
                           <span
                             key={item}
-                            className="rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground"
+                            className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs tabular-nums"
                           >
                             {item}
                           </span>
@@ -177,17 +210,17 @@ export default async function DashboardPage({
                     )}
 
                     {(brew.grinder || brew.dripper) && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-muted-foreground text-sm">
                         {[brew.grinder?.name, brew.dripper?.name].filter(Boolean).join(" · ")}
                       </p>
                     )}
 
                     {notes.length > 0 && (
-                      <dl className="space-y-1 text-sm">
+                      <dl className="border-border/70 space-y-1.5 border-l-2 pl-3 text-sm">
                         {notes.map(([label, value]) => (
                           <div key={label} className="flex gap-2">
-                            <dt className="shrink-0 text-muted-foreground">{label}:</dt>
-                            <dd>{value}</dd>
+                            <dt className="text-muted-foreground shrink-0">{label}</dt>
+                            <dd className="text-pretty">{value}</dd>
                           </div>
                         ))}
                       </dl>
@@ -198,11 +231,13 @@ export default async function DashboardPage({
                         href={`/brews/${brew.id}`}
                         className={buttonVariants({ variant: "outline", size: "sm" })}
                       >
+                        <Pencil className="size-3.5" aria-hidden />
                         Düzenle
                       </Link>
                       <form action={deleteBrew}>
                         <input type="hidden" name="id" value={brew.id} />
-                        <Button type="submit" variant="outline" size="sm">
+                        <Button type="submit" variant="ghost" size="sm">
+                          <Trash2 className="size-3.5" aria-hidden />
                           Sil
                         </Button>
                       </form>

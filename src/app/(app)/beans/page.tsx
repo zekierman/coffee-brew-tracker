@@ -1,6 +1,8 @@
 import { desc, eq } from "drizzle-orm";
+import { Bean, Pencil, PlusCircle, Trash2 } from "lucide-react";
 import { deleteBean } from "@/app/actions/beans";
 import { BeanForm } from "@/components/bean-form";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
@@ -18,14 +20,18 @@ export default async function BeansPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Çekirdekler</h1>
-        <p className="text-muted-foreground">Künyeleriyle birlikte kahve çekirdeklerin.</p>
-      </div>
+      <PageHeader
+        Icon={Bean}
+        title="Çekirdekler"
+        description="Künyeleriyle birlikte kahve çekirdeklerin."
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle>Yeni çekirdek</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <PlusCircle className="text-primary size-4" aria-hidden />
+            Yeni çekirdek
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <BeanForm submitLabel="Ekle" />
@@ -33,7 +39,7 @@ export default async function BeansPage() {
       </Card>
 
       {beans.length === 0 ? (
-        <p className="text-muted-foreground">Henüz çekirdek eklemedin.</p>
+        <p className="text-muted-foreground text-sm">Henüz çekirdek eklemedin.</p>
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2">
           {beans.map((bean) => {
@@ -47,24 +53,27 @@ export default async function BeansPage() {
 
             return (
               <li key={bean.id}>
-                <Card>
+                <Card className="h-full transition-shadow duration-200 hover:shadow-lg hover:shadow-black/5">
                   <CardHeader>
-                    <CardTitle>{bean.name}</CardTitle>
-                    {origin && <p className="text-sm text-muted-foreground">{origin}</p>}
+                    <CardTitle className="font-display text-lg tracking-tight">
+                      {bean.name}
+                    </CardTitle>
+                    {origin && <p className="text-muted-foreground text-sm">{origin}</p>}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {details.length > 0 && (
-                      <ul className="text-sm text-muted-foreground">
+                      <ul className="text-muted-foreground space-y-0.5 text-sm">
                         {details.map((line) => (
                           <li key={line}>{line}</li>
                         ))}
                       </ul>
                     )}
-                    {bean.notes && <p className="text-sm">{bean.notes}</p>}
+                    {bean.notes && <p className="text-sm text-pretty">{bean.notes}</p>}
 
                     <div className="flex items-start gap-2">
                       <details className="w-full">
-                        <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                        <summary className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors duration-200">
+                          <Pencil className="size-3.5" aria-hidden />
                           Düzenle
                         </summary>
                         <div className="pt-4">
@@ -88,7 +97,8 @@ export default async function BeansPage() {
 
                       <form action={deleteBean}>
                         <input type="hidden" name="id" value={bean.id} />
-                        <Button type="submit" variant="outline" size="sm">
+                        <Button type="submit" variant="ghost" size="sm">
+                          <Trash2 className="size-3.5" aria-hidden />
                           Sil
                         </Button>
                       </form>

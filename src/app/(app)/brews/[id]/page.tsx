@@ -1,7 +1,9 @@
 import { and, eq } from "drizzle-orm";
+import { Pencil } from "lucide-react";
 import { notFound } from "next/navigation";
 import { BrewForm } from "@/components/brew-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { db } from "@/db";
 import { brews } from "@/db/schema";
 import { loadBrewOptions } from "@/lib/brew-options";
@@ -22,13 +24,10 @@ export default async function EditBrewPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Demlemeyi düzenle</h1>
+      <PageHeader Icon={Pencil} title="Demlemeyi düzenle" />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Demleme detayları</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <BrewForm
             id={brew.id}
             beans={beans}

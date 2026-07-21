@@ -1,5 +1,6 @@
 "use client";
 
+import { Bean, NotebookPen, SlidersHorizontal } from "lucide-react";
 import { useActionState } from "react";
 import { saveBrew, type FormState } from "@/app/actions/brews";
 import { StarRating } from "@/components/star-rating";
@@ -59,6 +60,15 @@ function toLocalInputValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function SectionTitle({ Icon, children }: { Icon: typeof Bean; children: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-2 border-b pb-2 text-sm font-medium">
+      <Icon className="text-primary size-4" aria-hidden />
+      {children}
+    </h2>
+  );
+}
+
 export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(saveBrew, null);
   const totalSeconds = defaults?.brewTimeSeconds ?? null;
@@ -68,7 +78,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
       {id && <input type="hidden" name="id" value={id} />}
 
       <section className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Kahve ve ekipman</h2>
+        <SectionTitle Icon={Bean}>Kahve ve ekipman</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="beanId">Çekirdek</Label>
@@ -119,7 +129,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Parametreler</h2>
+        <SectionTitle Icon={SlidersHorizontal}>Parametreler</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="grindClicks">Öğütüm (tık)</Label>
@@ -127,6 +137,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
               id="grindClicks"
               name="grindClicks"
               type="number"
+              className="font-mono tabular-nums"
               min={0}
               max={999}
               inputMode="numeric"
@@ -141,6 +152,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
               id="waterTempC"
               name="waterTempC"
               type="number"
+              className="font-mono tabular-nums"
               step="0.5"
               min={1}
               max={100}
@@ -166,6 +178,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
               id="doseG"
               name="doseG"
               type="number"
+              className="font-mono tabular-nums"
               step="0.1"
               min={0.1}
               inputMode="decimal"
@@ -180,6 +193,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
               id="waterG"
               name="waterG"
               type="number"
+              className="font-mono tabular-nums"
               step="1"
               min={1}
               inputMode="decimal"
@@ -195,6 +209,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                 id="brewMinutes"
                 name="brewMinutes"
                 type="number"
+                className="font-mono tabular-nums"
                 min={0}
                 max={59}
                 inputMode="numeric"
@@ -206,6 +221,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
               <Input
                 name="brewSeconds"
                 type="number"
+                className="font-mono tabular-nums"
                 min={0}
                 max={59}
                 inputMode="numeric"
@@ -235,7 +251,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-sm font-medium text-muted-foreground">Tadım notları</h2>
+        <SectionTitle Icon={NotebookPen}>Tadım notları</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {NOTE_FIELDS.map((field) => (
             <div key={field.name} className="space-y-2">

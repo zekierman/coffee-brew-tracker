@@ -1,8 +1,11 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { logout } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { logout } from "@/app/actions/auth";
+import { auth } from "@/auth";
+import { Logo } from "@/components/logo";
+import { MainNav } from "@/components/main-nav";
+import { Button } from "@/components/ui/button";
 
 // ponytail: tek guard burada; /dashboard ve altindaki tum rotalar bu layout'tan
 // gectigi icin proxy.ts (eski middleware) gerekmiyor. bcrypt edge'de calismadigindan
@@ -13,33 +16,31 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-svh">
-      <header className="border-b">
+      <header className="bg-background/85 sticky top-0 z-20 border-b backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Link href="/dashboard" className="font-semibold">
-              Brew Log
-            </Link>
-            <Link href="/brews/new" className="text-sm text-muted-foreground hover:text-foreground">
-              Yeni demleme
-            </Link>
-            <Link href="/beans" className="text-sm text-muted-foreground hover:text-foreground">
-              Çekirdekler
-            </Link>
-            <Link href="/equipment" className="text-sm text-muted-foreground hover:text-foreground">
-              Ekipman
-            </Link>
-          </nav>
-          <form action={logout} className="flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+          <Link href="/dashboard" className="shrink-0">
+            <Logo />
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground hidden text-sm md:inline">
               {session.user.name || session.user.email}
             </span>
-            <Button type="submit" variant="outline" size="sm">
-              Çıkış
-            </Button>
-          </form>
+            <form action={logout}>
+              <Button type="submit" variant="ghost" size="sm" aria-label="Çıkış yap">
+                <LogOut className="size-4" aria-hidden />
+                <span className="hidden sm:inline">Çıkış</span>
+              </Button>
+            </form>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-5xl px-2 pb-2">
+          <MainNav />
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+
+      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
     </div>
   );
 }

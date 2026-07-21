@@ -1,6 +1,8 @@
+import { PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { BrewForm } from "@/components/brew-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { loadBrewOptions } from "@/lib/brew-options";
 import { requireUserId } from "@/lib/session";
 
@@ -10,10 +12,7 @@ export default async function NewBrewPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Yeni demleme</h1>
-        <p className="text-muted-foreground">Bugünün demlemesini kaydet.</p>
-      </div>
+      <PageHeader Icon={PlusCircle} title="Yeni demleme" description="Bugünün demlemesini kaydet." />
 
       {beans.length === 0 && grinders.length === 0 && (
         <p className="text-sm text-muted-foreground">
@@ -24,10 +23,7 @@ export default async function NewBrewPage() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Demleme detayları</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <BrewForm beans={beans} grinders={grinders} drippers={drippers} submitLabel="Kaydet" />
         </CardContent>
       </Card>
