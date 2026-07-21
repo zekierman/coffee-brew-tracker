@@ -17,14 +17,12 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { db } from "@/db";
 import { brews, coffeeBeans, tastingNotes } from "@/db/schema";
 import { brewRatio, formatBrewTime } from "@/lib/brews";
 import { loadBrewOptions } from "@/lib/brew-options";
 import { requireUserId } from "@/lib/session";
-
-const selectClass =
-  "border-input bg-transparent dark:bg-input/30 h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]";
 
 function first(value: string | string[] | undefined): string {
   return (Array.isArray(value) ? value[0] : value) ?? "";
@@ -122,14 +120,14 @@ export default async function DashboardPage({
 
             <div className="space-y-2">
               <Label htmlFor="bean">Çekirdek</Label>
-              <select id="bean" name="bean" defaultValue={beanFilter} className={selectClass}>
+              <NativeSelect id="bean" name="bean" defaultValue={beanFilter}>
                 <option value="">Hepsi</option>
                 {beans.map((bean) => (
                   <option key={bean.id} value={bean.id}>
                     {bean.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             <div className="space-y-2">
@@ -139,11 +137,10 @@ export default async function DashboardPage({
 
             <div className="space-y-2">
               <Label htmlFor="rating">En az puan</Label>
-              <select
+              <NativeSelect
                 id="rating"
                 name="rating"
                 defaultValue={ratingFilter || ""}
-                className={selectClass}
               >
                 <option value="">Hepsi</option>
                 {[5, 4, 3, 2, 1].map((value) => (
@@ -151,7 +148,7 @@ export default async function DashboardPage({
                     {"★".repeat(value)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
 
             {tagFilter && <input type="hidden" name="tag" value={tagFilter} />}
@@ -203,7 +200,7 @@ export default async function DashboardPage({
         <ul className="grid gap-4 lg:grid-cols-2">
           {rows.map((brew) => {
             const params = [
-              brew.grindClicks !== null && `${brew.grindClicks} tık`,
+              brew.grindClicks !== null && `${brew.grindClicks} click`,
               brew.waterTempC && `${brew.waterTempC} °C`,
               brew.brewTimeSeconds !== null && formatBrewTime(brew.brewTimeSeconds),
               brewRatio(brew.doseG, brew.waterG),

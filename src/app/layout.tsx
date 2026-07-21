@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Brew Log — Nitelikli kahve demleme günlüğü",
   description:
-    "Çekirdek künyeleri, öğütüm tıkı, su sıcaklığı ve tadım notlarıyla demlemelerini kaydet.",
+    "Çekirdek künyeleri, öğütüm click sayısı, su sıcaklığı ve tadım notlarıyla demlemelerini kaydet.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

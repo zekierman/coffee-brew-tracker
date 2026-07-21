@@ -98,7 +98,7 @@ export function parseBrewForm(formData: FormData): ParseResult {
   const grindClicks = numberInRange(formData.get("grindClicks"), {
     min: 0,
     max: 999,
-    label: "Öğütüm tıkı",
+    label: "Öğütüm click",
   });
   if (!grindClicks.ok) return grindClicks;
 

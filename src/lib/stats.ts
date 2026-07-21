@@ -39,20 +39,20 @@ function averageRatingBy(
 
 /**
  * Uygulamanin asil sorusu: hangi ogutum ayari daha iyi fincan veriyor?
- * Tik sayisina gore artan siralanir -- buyukluk degil, ayar ekseni.
+ * En yuksek puanli ayar basta gelir; ilk sirada duran senin tatli noktan.
  */
-export function ratingByGrind(rows: BrewRow[]): Bucket[] {
+export function bestGrindSettings(rows: BrewRow[], limit = 5): Bucket[] {
   return averageRatingBy(rows, (row) =>
     row.grindClicks === null ? null : String(row.grindClicks),
-  ).sort((a, b) => Number(a.label) - Number(b.label));
+  ).slice(0, limit);
 }
 
-export function ratingByBean(rows: BrewRow[]): Bucket[] {
-  return averageRatingBy(rows, (row) => row.beanName);
+export function ratingByBean(rows: BrewRow[], limit = 5): Bucket[] {
+  return averageRatingBy(rows, (row) => row.beanName).slice(0, limit);
 }
 
-export function ratingByMethod(rows: BrewRow[]): Bucket[] {
-  return averageRatingBy(rows, (row) => row.method);
+export function ratingByMethod(rows: BrewRow[], limit = 5): Bucket[] {
+  return averageRatingBy(rows, (row) => row.method).slice(0, limit);
 }
 
 /** Son n ayin demleme sayisi, eski -> yeni. Bos aylar 0 olarak yer alir. */

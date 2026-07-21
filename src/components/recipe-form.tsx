@@ -5,11 +5,9 @@ import { saveRecipe, type FormState } from "@/app/actions/brews";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 
 type Option = { id: string; name: string };
-
-const selectClass =
-  "border-input bg-transparent dark:bg-input/30 h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]";
 
 export function RecipeForm({ grinders, drippers }: { grinders: Option[]; drippers: Option[] }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(saveRecipe, null);
@@ -28,30 +26,30 @@ export function RecipeForm({ grinders, drippers }: { grinders: Option[]; dripper
 
       <div className="space-y-2">
         <Label htmlFor="recipeGrinder">Değirmen</Label>
-        <select id="recipeGrinder" name="grinderId" className={selectClass} defaultValue="">
+        <NativeSelect id="recipeGrinder" name="grinderId" defaultValue="">
           <option value="">—</option>
           {grinders.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="recipeDripper">Dripper</Label>
-        <select id="recipeDripper" name="dripperId" className={selectClass} defaultValue="">
+        <NativeSelect id="recipeDripper" name="dripperId" defaultValue="">
           <option value="">—</option>
           {drippers.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="recipeClicks">Öğütüm (tık)</Label>
+        <Label htmlFor="recipeClicks">Öğütüm (click)</Label>
         <Input
           id="recipeClicks"
           name="grindClicks"

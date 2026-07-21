@@ -1,14 +1,23 @@
 import { desc, eq } from "drizzle-orm";
-import { BarChart3, CalendarRange, Coffee, Scale, SlidersHorizontal, Star } from "lucide-react";
-import { BarChart } from "@/components/bar-chart";
+import {
+  BarChart3,
+  Bean,
+  CalendarRange,
+  Coffee,
+  Scale,
+  Star,
+  Trophy,
+} from "lucide-react";
+import { ColumnChart } from "@/components/column-chart";
 import { PageHeader } from "@/components/page-header";
+import { RankList } from "@/components/rank-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { brews } from "@/db/schema";
 import {
+  bestGrindSettings,
   brewsPerMonth,
   ratingByBean,
-  ratingByGrind,
   ratingByMethod,
   summarize,
   type BrewRow,
@@ -27,14 +36,16 @@ function StatTile({
   hint?: string;
 }) {
   return (
-    <Card>
-      <CardContent className="space-y-1 pt-6">
+    <Card className="relative overflow-hidden">
+      {/* Sicak vurgu seridi -- kutulari duz dikdortgen olmaktan cikariyor. */}
+      <span className="bg-chart-1 absolute inset-y-0 left-0 w-1" aria-hidden />
+      <CardContent className="space-y-1 pt-6 pl-5">
         <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
           <Icon className="size-3.5" aria-hidden />
           {label}
         </p>
         <p className="font-display text-3xl leading-none font-semibold tabular-nums">{value}</p>
-        {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
+        <p className="text-muted-foreground text-xs">{hint ?? " "}</p>
       </CardContent>
     </Card>
   );
@@ -69,12 +80,10 @@ export default async function StatsPage() {
   }));
 
   const summary = summarize(data, rows.filter((r) => r.isFavorite).length);
-  const grind = ratingByGrind(data);
-  const beans = ratingByBean(data);
-  const methods = ratingByMethod(data);
+  const best = bestGrindSettings(data, 5);
+  const beans = ratingByBean(data, 5);
+  const methods = ratingByMethod(data, 5);
   const months = brewsPerMonth(data);
-
-  const brewCount = (count: number) => `(${count} demleme)`;
 
   return (
     <div className="space-y-6">
@@ -85,7 +94,12 @@ export default async function StatsPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile Icon={Coffee} label="Toplam demleme" value={String(summary.total)} />
+        <StatTile
+          Icon={Coffee}
+          label="Toplam demleme"
+          value={String(summary.total)}
+          hint={summary.favorites > 0 ? `${summary.favorites} favori` : undefined}
+        />
         <StatTile
           Icon={Star}
           label="Ortalama puan"
@@ -97,31 +111,27 @@ export default async function StatsPage() {
           label="Ortalama oran"
           value={summary.averageRatio === null ? "—" : `1:${summary.averageRatio}`}
         />
-        <StatTile
-          Icon={Coffee}
-          label="Öğütülen kahve"
-          value={`${summary.totalCoffeeG} g`}
-          hint={`${summary.favorites} favori`}
-        />
+        <StatTile Icon={Bean} label="Öğütülen kahve" value={`${summary.totalCoffeeG} g`} />
       </div>
 
-      <Card>
+      {/* Sayfanin ana sorusu: hangi click ayari en iyi fincani veriyor? */}
+      <Card className="relative overflow-hidden">
+        <span className="bg-chart-1 absolute inset-x-0 top-0 h-1" aria-hidden />
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <SlidersHorizontal className="text-primary size-4" aria-hidden />
-            Öğütüm tıkına göre ortalama puan
+            <Trophy className="text-primary size-4" aria-hidden />
+            En iyi öğütüm ayarların
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Tık sayısına göre sıralı. En yüksek puanlı ayar senin tatlı noktan.
+            Aldığı ortalama yıldıza göre sıralı — ilk sıradaki değirmen ayarın en iyi sonucu
+            verdiğin ayar.
           </p>
         </CardHeader>
         <CardContent>
-          <BarChart
-            data={grind}
-            max={5}
-            unit=" ★"
-            countLabel={brewCount}
-            emptyText="Henüz öğütüm tıkı ve puan girilmiş demleme yok."
+          <RankList
+            data={best}
+            labelSuffix="click"
+            emptyText="Henüz öğütüm click'i ve puanı girilmiş demleme yok."
           />
         </CardContent>
       </Card>
@@ -129,31 +139,25 @@ export default async function StatsPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Çekirdeğe göre ortalama puan</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bean className="text-primary size-4" aria-hidden />
+              En iyi çekirdeklerin
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChart
-              data={beans}
-              max={5}
-              unit=" ★"
-              countLabel={brewCount}
-              emptyText="Puanlanmış çekirdek yok."
-            />
+            <RankList data={beans} emptyText="Puanlanmış çekirdek yok." />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Yönteme göre ortalama puan</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Coffee className="text-primary size-4" aria-hidden />
+              En iyi yöntemlerin
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChart
-              data={methods}
-              max={5}
-              unit=" ★"
-              countLabel={brewCount}
-              emptyText="Puanlanmış yöntem yok."
-            />
+            <RankList data={methods} emptyText="Puanlanmış yöntem yok." />
           </CardContent>
         </Card>
       </div>
@@ -162,11 +166,11 @@ export default async function StatsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarRange className="text-primary size-4" aria-hidden />
-            Aylara göre demleme sayısı
+            Son 6 ayda demleme sayısı
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <BarChart data={months} emptyText="Kayıt yok." />
+          <ColumnChart data={months} emptyText="Kayıt yok." />
         </CardContent>
       </Card>
     </div>

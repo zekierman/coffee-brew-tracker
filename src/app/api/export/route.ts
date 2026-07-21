@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     degirmen: brew.grinder?.name ?? "",
     dripper: brew.dripper?.name ?? "",
     yontem: brew.method ?? "",
-    ogutum_tik: brew.grindClicks ?? "",
+    ogutum_click: brew.grindClicks ?? "",
     su_sicakligi_c: brew.waterTempC ?? "",
     kahve_g: brew.doseG ?? "",
     su_g: brew.waterG ?? "",

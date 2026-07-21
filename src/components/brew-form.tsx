@@ -3,11 +3,11 @@
 import { Bean, ClipboardList, NotebookPen, SlidersHorizontal, Star } from "lucide-react";
 import { useActionState, useState } from "react";
 import { saveBrew, type FormState } from "@/app/actions/brews";
-import { BrewTimer } from "@/components/brew-timer";
 import { StarRating } from "@/components/star-rating";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { SCA_FIELDS, scaTotal, type ScaField } from "@/lib/brews";
 
@@ -56,9 +56,6 @@ const NOTE_FIELDS = [
   { name: "sweetness", label: "Tatlılık", placeholder: "Bal, kahverengi şeker" },
   { name: "aftertaste", label: "Bitiş", placeholder: "Ağır ve bitter kakao acılığı" },
 ] as const;
-
-const selectClass =
-  "border-input bg-transparent dark:bg-input/30 h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]";
 
 /** <input type="datetime-local"> yerel saat bekler, ISO'nun Z'li hali islemiyor. */
 function toLocalInputValue(date: Date): string {
@@ -132,43 +129,31 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
   const [state, formAction, pending] = useActionState<FormState, FormData>(saveBrew, null);
   const totalSeconds = defaults?.brewTimeSeconds ?? null;
 
-  // Zamanlayici bu alanlari doldurdugu icin kontrollu tutuluyor.
-  const [minutes, setMinutes] = useState(totalSeconds === null ? "" : String(Math.floor(totalSeconds / 60)));
-  const [seconds, setSeconds] = useState(totalSeconds === null ? "" : String(totalSeconds % 60));
-
   return (
     <form action={formAction} className="space-y-8">
       {id && <input type="hidden" name="id" value={id} />}
-
-      <BrewTimer
-        onStop={(total) => {
-          setMinutes(String(Math.floor(total / 60)));
-          setSeconds(String(total % 60));
-        }}
-      />
 
       <section className="space-y-4">
         <SectionTitle Icon={Bean}>Kahve ve ekipman</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="beanId">Çekirdek</Label>
-            <select id="beanId" name="beanId" defaultValue={defaults?.beanId ?? ""} className={selectClass}>
+            <NativeSelect id="beanId" name="beanId" defaultValue={defaults?.beanId ?? ""}>
               <option value="">—</option>
               {beans.map((bean) => (
                 <option key={bean.id} value={bean.id}>
                   {bean.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="grinderId">Değirmen</Label>
-            <select
+            <NativeSelect
               id="grinderId"
               name="grinderId"
               defaultValue={defaults?.grinderId ?? ""}
-              className={selectClass}
             >
               <option value="">—</option>
               {grinders.map((item) => (
@@ -176,16 +161,15 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                   {item.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="dripperId">Dripper</Label>
-            <select
+            <NativeSelect
               id="dripperId"
               name="dripperId"
               defaultValue={defaults?.dripperId ?? ""}
-              className={selectClass}
             >
               <option value="">—</option>
               {drippers.map((item) => (
@@ -193,7 +177,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                   {item.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         </div>
       </section>
@@ -202,7 +186,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
         <SectionTitle Icon={SlidersHorizontal}>Parametreler</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="grindClicks">Öğütüm (tık)</Label>
+            <Label htmlFor="grindClicks">Öğütüm (click)</Label>
             <Input
               id="grindClicks"
               name="grindClicks"
@@ -283,8 +267,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                 min={0}
                 max={59}
                 inputMode="numeric"
-                value={minutes}
-                onChange={(e) => setMinutes(e.target.value)}
+                defaultValue={totalSeconds === null ? "" : Math.floor(totalSeconds / 60)}
                 placeholder="2"
                 aria-label="Dakika"
               />
@@ -296,8 +279,7 @@ export function BrewForm({ id, beans, grinders, drippers, defaults, submitLabel 
                 min={0}
                 max={59}
                 inputMode="numeric"
-                value={seconds}
-                onChange={(e) => setSeconds(e.target.value)}
+                defaultValue={totalSeconds === null ? "" : totalSeconds % 60}
                 placeholder="35"
                 aria-label="Saniye"
               />

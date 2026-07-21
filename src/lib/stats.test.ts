@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { brewsPerMonth, ratingByBean, ratingByGrind, summarize, type BrewRow } from "./stats";
+import { brewsPerMonth, ratingByBean, bestGrindSettings, summarize, type BrewRow } from "./stats";
 
 function row(over: Partial<BrewRow> = {}): BrewRow {
   return {
@@ -15,8 +15,8 @@ function row(over: Partial<BrewRow> = {}): BrewRow {
   };
 }
 
-test("ogutum tikina gore ortalama puan, tik sirasinda gelir", () => {
-  const result = ratingByGrind([
+test("en iyi ogutum ayarlari puana gore azalan siralanir", () => {
+  const result = bestGrindSettings([
     row({ grindClicks: 92, rating: 3 }),
     row({ grindClicks: 88, rating: 4 }),
     row({ grindClicks: 88, rating: 5 }),
@@ -28,8 +28,15 @@ test("ogutum tikina gore ortalama puan, tik sirasinda gelir", () => {
   ]);
 });
 
+test("en iyi ayarlar listesi limitle kirpilir", () => {
+  const many = Array.from({ length: 9 }, (_, i) =>
+    row({ grindClicks: 80 + i, rating: ((i % 5) + 1) as number }),
+  );
+  assert.equal(bestGrindSettings(many, 3).length, 3);
+});
+
 test("puansiz demleme ortalamaya girmez", () => {
-  const result = ratingByGrind([
+  const result = bestGrindSettings([
     row({ grindClicks: 88, rating: 4 }),
     row({ grindClicks: 88, rating: null }),
   ]);
@@ -37,7 +44,7 @@ test("puansiz demleme ortalamaya girmez", () => {
 });
 
 test("tiksiz demleme gruplanmaz", () => {
-  assert.deepEqual(ratingByGrind([row({ grindClicks: null, rating: 5 })]), []);
+  assert.deepEqual(bestGrindSettings([row({ grindClicks: null, rating: 5 })]), []);
 });
 
 test("cekirdek ortalamalari puana gore siralanir", () => {
@@ -81,5 +88,5 @@ test("bos veri cokmez", () => {
   assert.equal(summary.total, 0);
   assert.equal(summary.averageRating, null);
   assert.equal(summary.averageRatio, null);
-  assert.deepEqual(ratingByGrind([]), []);
+  assert.deepEqual(bestGrindSettings([]), []);
 });

@@ -28,7 +28,7 @@ export default async function RecipesPage() {
       <PageHeader
         Icon={BookMarked}
         title="Tarifler"
-        description="Sık kullandığın ayarları kaydet, yeni demlemeyi tek tıkla doldur."
+        description="Sık kullandığın ayarları kaydet, yeni demlemeyi tek dokunuşla doldur."
       />
 
       <Card>
@@ -49,7 +49,7 @@ export default async function RecipesPage() {
         <ul className="grid gap-4 sm:grid-cols-2">
           {rows.map((recipe) => {
             const params = [
-              recipe.grindClicks !== null && `${recipe.grindClicks} tık`,
+              recipe.grindClicks !== null && `${recipe.grindClicks} click`,
               recipe.waterTempC && `${recipe.waterTempC} °C`,
               recipe.doseG && recipe.waterG && `${recipe.doseG}g / ${recipe.waterG}g`,
               recipe.brewTimeSeconds !== null && formatBrewTime(recipe.brewTimeSeconds),
