@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Brew Log
 
-## Getting Started
+Nitelikli kahve demleme günlüğü. Çekirdek künyesi, ekipman, öğütüm tıkı, su sıcaklığı,
+demleme süresi ve tadım notlarını kaydedip geçmiş demlemeleri filtrelemek için.
 
-First, run the development server:
+## Yığın
+
+Next.js (App Router) · Tailwind CSS · shadcn/ui · Drizzle ORM · PostgreSQL · Auth.js
+
+## Lokal kurulum
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env        # AUTH_SECRET doldur: openssl rand -base64 32
+docker compose up -d        # PostgreSQL (host portu 5434)
+npx drizzle-kit migrate     # semayi uygula
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Postgres host portu 5432 yerine **5434**: geliştirme makinesinde 5432'yi native bir
+PostgreSQL servisi, 5433'ü başka bir proje kullanıyor.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Komutlar
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Komut | İş |
+| --- | --- |
+| `npm run dev` | Geliştirme sunucusu |
+| `npm run build` | Prodüksiyon derlemesi |
+| `npm run db:generate` | Şema değişikliğinden SQL migration üret |
+| `npx drizzle-kit migrate` | Migration'ları veritabanına uygula |
+| `npm run db:studio` | Drizzle Studio |
+| `npx tsx --test src/lib/*.test.ts` | Testler |
 
-## Learn More
+## Veri modeli
 
-To learn more about Next.js, take a look at the following resources:
+`users` · `equipment` (grinder/dripper/kettle/scale/filter/other) · `coffee_beans`
+(ülke, bölge, çiftlik, varyete, işleme, kavurma tarihi, kavurucu) · `brews` (öğütüm
+tıkı, su sıcaklığı, doz, su, süre, 1-5 puan) · `tasting_notes` (aroma, tat, asitlik,
+gövde, tatlılık, aftertaste)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Her kayıt `user_id` ile kullanıcıya bağlı; sorgular bu alanla filtrelenir.
