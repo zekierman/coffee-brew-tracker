@@ -15,9 +15,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-svh">
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/dashboard" className="font-semibold">
-            Brew Log
-          </Link>
+          <nav className="flex items-center gap-4">
+            <Link href="/dashboard" className="font-semibold">
+              Brew Log
+            </Link>
+            <Link href="/equipment" className="text-sm text-muted-foreground hover:text-foreground">
+              Ekipman
+            </Link>
+          </nav>
           <form action={logout} className="flex items-center gap-3">
             <span className="hidden text-sm text-muted-foreground sm:inline">
               {session.user.name || session.user.email}
