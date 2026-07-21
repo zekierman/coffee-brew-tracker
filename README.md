@@ -3,6 +3,20 @@
 Nitelikli kahve demleme günlüğü. Çekirdek künyesi, ekipman, öğütüm tıkı, su sıcaklığı,
 demleme süresi ve tadım notlarını kaydedip geçmiş demlemeleri filtrelemek için.
 
+## Neler var
+
+- **Kayıt/giriş** — e-posta + şifre (bcrypt), JWT oturum. Kayıt herkese açık.
+- **Ekipman** — değirmen, dripper, kettle, terazi, filtre; ekle/düzenle/sil.
+- **Çekirdekler** — ülke, bölge, çiftlik, varyete, işleme, kavurma tarihi, kavurucu.
+  Kart üzerinde kavurmadan bu yana geçen gün gösterilir.
+- **Demleme günlüğü** — öğütüm tıkı, su sıcaklığı, doz/su, dakika+saniye süre, yöntem,
+  1-5 yıldız ve alan bazlı tadım notları (aroma, tat, asitlik, gövde, tatlılık, bitiş).
+- **Dashboard** — demlemeler kart olarak listelenir; çekirdek, yöntem ve minimum puana
+  göre filtrelenir. Kahve:su oranı otomatik hesaplanır. Filtreler URL'de tutulur.
+
+Her kayıt oturumdaki kullanıcıya bağlıdır; okuma, güncelleme ve silme sorgularının
+hepsinde `user_id` koşulu vardır.
+
 ## Yığın
 
 Next.js (App Router) · Tailwind CSS · shadcn/ui · Drizzle ORM · PostgreSQL · Auth.js
