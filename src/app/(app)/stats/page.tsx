@@ -1,27 +1,12 @@
 import { desc, eq } from "drizzle-orm";
-import {
-  BarChart3,
-  Bean,
-  CalendarRange,
-  Coffee,
-  Scale,
-  Star,
-  Trophy,
-} from "lucide-react";
+import { BarChart3, Bean, CalendarRange, Coffee, Scale, Star, Trophy } from "lucide-react";
+import { BestBrews } from "@/components/best-brews";
 import { ColumnChart } from "@/components/column-chart";
 import { PageHeader } from "@/components/page-header";
-import { RankList } from "@/components/rank-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { db } from "@/db";
 import { brews } from "@/db/schema";
-import {
-  bestGrindSettings,
-  brewsPerMonth,
-  ratingByBean,
-  ratingByMethod,
-  summarize,
-  type BrewRow,
-} from "@/lib/stats";
+import { brewsPerMonth, summarize, topRatedBrews, type BrewRow } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
 
 function StatTile({
@@ -45,7 +30,7 @@ function StatTile({
           {label}
         </p>
         <p className="font-display text-3xl leading-none font-semibold tabular-nums">{value}</p>
-        <p className="text-muted-foreground text-xs">{hint ?? " "}</p>
+        <p className="text-muted-foreground text-xs">{hint ?? " "}</p>
       </CardContent>
     </Card>
   );
@@ -59,30 +44,34 @@ export default async function StatsPage() {
     orderBy: desc(brews.brewedAt),
     with: { bean: { columns: { name: true } } },
     columns: {
+      id: true,
       grindClicks: true,
       rating: true,
       method: true,
+      waterTempC: true,
       doseG: true,
       waterG: true,
+      brewTimeSeconds: true,
       brewedAt: true,
       isFavorite: true,
     },
   });
 
   const data: BrewRow[] = rows.map((row) => ({
+    id: row.id,
     grindClicks: row.grindClicks,
     rating: row.rating,
     method: row.method,
+    waterTempC: row.waterTempC,
     doseG: row.doseG,
     waterG: row.waterG,
+    brewTimeSeconds: row.brewTimeSeconds,
     brewedAt: row.brewedAt,
     beanName: row.bean?.name ?? null,
   }));
 
   const summary = summarize(data, rows.filter((r) => r.isFavorite).length);
-  const best = bestGrindSettings(data, 5);
-  const beans = ratingByBean(data, 5);
-  const methods = ratingByMethod(data, 5);
+  const best = topRatedBrews(data, 5);
   const months = brewsPerMonth(data);
 
   return (
@@ -90,7 +79,7 @@ export default async function StatsPage() {
       <PageHeader
         Icon={BarChart3}
         title="İstatistikler"
-        description="Hangi ayarın daha iyi fincan verdiğini veriden gör."
+        description="En iyi fincanların ve demleme alışkanlığın."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -114,53 +103,21 @@ export default async function StatsPage() {
         <StatTile Icon={Bean} label="Öğütülen kahve" value={`${summary.totalCoffeeG} g`} />
       </div>
 
-      {/* Sayfanin ana sorusu: hangi click ayari en iyi fincani veriyor? */}
       <Card className="relative overflow-hidden">
         <span className="bg-chart-1 absolute inset-x-0 top-0 h-1" aria-hidden />
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Trophy className="text-primary size-4" aria-hidden />
-            En iyi öğütüm ayarların
+            En iyi demlemelerin
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Aldığı ortalama yıldıza göre sıralı — ilk sıradaki değirmen ayarın en iyi sonucu
-            verdiğin ayar.
+            En yüksek puanlı fincan en üstte. Ayarlarını görüp tek dokunuşla tekrarlayabilirsin.
           </p>
         </CardHeader>
         <CardContent>
-          <RankList
-            data={best}
-            labelSuffix="click"
-            emptyText="Henüz öğütüm click'i ve puanı girilmiş demleme yok."
-          />
+          <BestBrews data={best} emptyText="Henüz puanladığın demleme yok." />
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Bean className="text-primary size-4" aria-hidden />
-              En iyi çekirdeklerin
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RankList data={beans} emptyText="Puanlanmış çekirdek yok." />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Coffee className="text-primary size-4" aria-hidden />
-              En iyi yöntemlerin
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RankList data={methods} emptyText="Puanlanmış yöntem yok." />
-          </CardContent>
-        </Card>
-      </div>
 
       <Card>
         <CardHeader>

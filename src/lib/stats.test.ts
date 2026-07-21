@@ -1,58 +1,60 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { brewsPerMonth, ratingByBean, bestGrindSettings, summarize, type BrewRow } from "./stats";
+import { brewsPerMonth, summarize, topRatedBrews, type BrewRow } from "./stats";
 
+let counter = 0;
 function row(over: Partial<BrewRow> = {}): BrewRow {
   return {
+    id: `brew-${counter++}`,
     grindClicks: null,
     rating: null,
     method: null,
+    waterTempC: null,
     doseG: null,
     waterG: null,
+    brewTimeSeconds: null,
     brewedAt: new Date("2026-07-21T09:00:00Z"),
     beanName: null,
     ...over,
   };
 }
 
-test("en iyi ogutum ayarlari puana gore azalan siralanir", () => {
-  const result = bestGrindSettings([
-    row({ grindClicks: 92, rating: 3 }),
-    row({ grindClicks: 88, rating: 4 }),
-    row({ grindClicks: 88, rating: 5 }),
+test("en yuksek puanli demleme basa gelir", () => {
+  const result = topRatedBrews([
+    row({ id: "orta", rating: 3 }),
+    row({ id: "en-iyi", rating: 5 }),
+    row({ id: "iyi", rating: 4 }),
   ]);
 
-  assert.deepEqual(result, [
-    { label: "88", value: 4.5, count: 2 },
-    { label: "92", value: 3, count: 1 },
-  ]);
-});
-
-test("en iyi ayarlar listesi limitle kirpilir", () => {
-  const many = Array.from({ length: 9 }, (_, i) =>
-    row({ grindClicks: 80 + i, rating: ((i % 5) + 1) as number }),
+  assert.deepEqual(
+    result.map((r) => r.id),
+    ["en-iyi", "iyi", "orta"],
   );
-  assert.equal(bestGrindSettings(many, 3).length, 3);
 });
 
-test("puansiz demleme ortalamaya girmez", () => {
-  const result = bestGrindSettings([
-    row({ grindClicks: 88, rating: 4 }),
-    row({ grindClicks: 88, rating: null }),
+test("esit puanda yeni tarihli ustte kalir", () => {
+  const result = topRatedBrews([
+    row({ id: "eski", rating: 5, brewedAt: new Date("2026-07-01") }),
+    row({ id: "yeni", rating: 5, brewedAt: new Date("2026-07-20") }),
   ]);
-  assert.deepEqual(result, [{ label: "88", value: 4, count: 1 }]);
+
+  assert.deepEqual(
+    result.map((r) => r.id),
+    ["yeni", "eski"],
+  );
 });
 
-test("tiksiz demleme gruplanmaz", () => {
-  assert.deepEqual(bestGrindSettings([row({ grindClicks: null, rating: 5 })]), []);
+test("puansiz demleme listeye girmez", () => {
+  const result = topRatedBrews([row({ rating: null }), row({ id: "puanli", rating: 2 })]);
+  assert.deepEqual(
+    result.map((r) => r.id),
+    ["puanli"],
+  );
 });
 
-test("cekirdek ortalamalari puana gore siralanir", () => {
-  const result = ratingByBean([
-    row({ beanName: "Kenya", rating: 3 }),
-    row({ beanName: "Etiyopya", rating: 5 }),
-  ]);
-  assert.equal(result[0].label, "Etiyopya");
+test("liste limitle kirpilir", () => {
+  const many = Array.from({ length: 12 }, () => row({ rating: 4 }));
+  assert.equal(topRatedBrews(many, 5).length, 5);
 });
 
 test("aylik demleme sayisi bos aylari 0 ile doldurur", () => {
@@ -88,5 +90,5 @@ test("bos veri cokmez", () => {
   assert.equal(summary.total, 0);
   assert.equal(summary.averageRating, null);
   assert.equal(summary.averageRatio, null);
-  assert.deepEqual(bestGrindSettings([]), []);
+  assert.deepEqual(topRatedBrews([]), []);
 });

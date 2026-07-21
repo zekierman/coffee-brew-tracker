@@ -1,9 +1,12 @@
 export type BrewRow = {
+  id: string;
   grindClicks: number | null;
   rating: number | null;
   method: string | null;
+  waterTempC: string | null;
   doseG: string | null;
   waterG: string | null;
+  brewTimeSeconds: number | null;
   brewedAt: Date;
   beanName: string | null;
 };
@@ -14,45 +17,16 @@ function mean(values: number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-/** Bir anahtara gore gruplayip puan ortalamasi alir; puansiz demlemeler sayilmaz. */
-function averageRatingBy(
-  rows: BrewRow[],
-  key: (row: BrewRow) => string | null,
-): Bucket[] {
-  const groups = new Map<string, number[]>();
-  for (const row of rows) {
-    const label = key(row);
-    if (label === null || row.rating === null) continue;
-    const list = groups.get(label);
-    if (list) list.push(row.rating);
-    else groups.set(label, [row.rating]);
-  }
-
-  return [...groups.entries()]
-    .map(([label, ratings]) => ({
-      label,
-      value: Number(mean(ratings).toFixed(2)),
-      count: ratings.length,
-    }))
-    .sort((a, b) => b.value - a.value || b.count - a.count);
-}
-
 /**
- * Uygulamanin asil sorusu: hangi ogutum ayari daha iyi fincan veriyor?
- * En yuksek puanli ayar basta gelir; ilk sirada duran senin tatli noktan.
+ * En yuksek puanli demlemeler once. Esitlikte yeni tarihli ustte kalir --
+ * ayni puani veren iki demlemeden guncel olani tekrarlamak daha mantikli.
+ * Puansiz demlemeler listeye girmez.
  */
-export function bestGrindSettings(rows: BrewRow[], limit = 5): Bucket[] {
-  return averageRatingBy(rows, (row) =>
-    row.grindClicks === null ? null : String(row.grindClicks),
-  ).slice(0, limit);
-}
-
-export function ratingByBean(rows: BrewRow[], limit = 5): Bucket[] {
-  return averageRatingBy(rows, (row) => row.beanName).slice(0, limit);
-}
-
-export function ratingByMethod(rows: BrewRow[], limit = 5): Bucket[] {
-  return averageRatingBy(rows, (row) => row.method).slice(0, limit);
+export function topRatedBrews(rows: BrewRow[], limit = 5): BrewRow[] {
+  return rows
+    .filter((row) => row.rating !== null)
+    .sort((a, b) => b.rating! - a.rating! || b.brewedAt.getTime() - a.brewedAt.getTime())
+    .slice(0, limit);
 }
 
 /** Son n ayin demleme sayisi, eski -> yeni. Bos aylar 0 olarak yer alir. */
