@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: brewlog
       POSTGRES_DB: brewlog
     ports:
-      - "5432:5432"
+      # 5432 host'ta native PostgreSQL, 5433 baska bir projede kullaniliyor.
+      - "5434:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
