@@ -15,9 +15,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-svh">
       <header className="border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <nav className="flex items-center gap-4">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link href="/dashboard" className="font-semibold">
               Brew Log
+            </Link>
+            <Link href="/brews/new" className="text-sm text-muted-foreground hover:text-foreground">
+              Yeni demleme
+            </Link>
+            <Link href="/beans" className="text-sm text-muted-foreground hover:text-foreground">
+              Çekirdekler
             </Link>
             <Link href="/equipment" className="text-sm text-muted-foreground hover:text-foreground">
               Ekipman

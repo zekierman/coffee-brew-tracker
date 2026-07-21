@@ -1,0 +1,145 @@
+export type BrewInput = {
+  beanId: string | null;
+  grinderId: string | null;
+  dripperId: string | null;
+  grindClicks: number | null;
+  waterTempC: string | null;
+  doseG: string | null;
+  waterG: string | null;
+  brewTimeSeconds: number | null;
+  method: string | null;
+  rating: number | null;
+  brewedAt: Date;
+};
+
+export type TastingNoteInput = {
+  aroma: string | null;
+  flavor: string | null;
+  acidity: string | null;
+  body: string | null;
+  sweetness: string | null;
+  aftertaste: string | null;
+};
+
+export type ParseResult =
+  | { ok: true; brew: BrewInput; note: TastingNoteInput; hasNote: boolean }
+  | { ok: false; error: string };
+
+function optional(value: FormDataEntryValue | null): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function optionalId(value: FormDataEntryValue | null): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+
+/** Bos -> null, sayi degilse veya araligin disindaysa hata. */
+function numberInRange(
+  value: FormDataEntryValue | null,
+  { min, max, label }: { min: number; max: number; label: string },
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const raw = optional(value);
+  if (raw === null) return { ok: true, value: null };
+
+  const parsed = Number(raw.replace(",", "."));
+  if (!Number.isFinite(parsed)) return { ok: false, error: `${label} sayı olmalı.` };
+  if (parsed < min || parsed > max) {
+    return { ok: false, error: `${label} ${min}-${max} aralığında olmalı.` };
+  }
+  return { ok: true, value: parsed };
+}
+
+/** Dakika + saniye alanlarini toplam saniyeye cevirir. */
+export function toBrewSeconds(
+  minutes: FormDataEntryValue | null,
+  seconds: FormDataEntryValue | null,
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const min = numberInRange(minutes, { min: 0, max: 59, label: "Dakika" });
+  if (!min.ok) return min;
+  const sec = numberInRange(seconds, { min: 0, max: 59, label: "Saniye" });
+  if (!sec.ok) return sec;
+
+  if (min.value === null && sec.value === null) return { ok: true, value: null };
+  return { ok: true, value: (min.value ?? 0) * 60 + (sec.value ?? 0) };
+}
+
+export function formatBrewTime(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes} dk ${String(seconds).padStart(2, "0")} sn`;
+}
+
+export function parseBrewForm(formData: FormData): ParseResult {
+  const grindClicks = numberInRange(formData.get("grindClicks"), {
+    min: 0,
+    max: 999,
+    label: "Öğütüm tıkı",
+  });
+  if (!grindClicks.ok) return grindClicks;
+
+  const waterTemp = numberInRange(formData.get("waterTempC"), {
+    min: 1,
+    max: 100,
+    label: "Su sıcaklığı",
+  });
+  if (!waterTemp.ok) return waterTemp;
+
+  const dose = numberInRange(formData.get("doseG"), { min: 0.1, max: 999, label: "Kahve" });
+  if (!dose.ok) return dose;
+
+  const water = numberInRange(formData.get("waterG"), { min: 1, max: 9999, label: "Su" });
+  if (!water.ok) return water;
+
+  const time = toBrewSeconds(formData.get("brewMinutes"), formData.get("brewSeconds"));
+  if (!time.ok) return time;
+
+  const rating = numberInRange(formData.get("rating"), { min: 1, max: 5, label: "Puan" });
+  if (!rating.ok) return rating;
+  if (rating.value !== null && !Number.isInteger(rating.value)) {
+    return { ok: false, error: "Puan tam sayı olmalı." };
+  }
+
+  const brewedAtRaw = optional(formData.get("brewedAt"));
+  const brewedAt = brewedAtRaw ? new Date(brewedAtRaw) : new Date();
+  if (Number.isNaN(brewedAt.getTime())) {
+    return { ok: false, error: "Demleme tarihi geçersiz." };
+  }
+
+  const note: TastingNoteInput = {
+    aroma: optional(formData.get("aroma")),
+    flavor: optional(formData.get("flavor")),
+    acidity: optional(formData.get("acidity")),
+    body: optional(formData.get("body")),
+    sweetness: optional(formData.get("sweetness")),
+    aftertaste: optional(formData.get("aftertaste")),
+  };
+
+  return {
+    ok: true,
+    brew: {
+      beanId: optionalId(formData.get("beanId")),
+      grinderId: optionalId(formData.get("grinderId")),
+      dripperId: optionalId(formData.get("dripperId")),
+      grindClicks: grindClicks.value,
+      // numeric kolonlar Drizzle'da string bekler.
+      waterTempC: waterTemp.value === null ? null : String(waterTemp.value),
+      doseG: dose.value === null ? null : String(dose.value),
+      waterG: water.value === null ? null : String(water.value),
+      brewTimeSeconds: time.value,
+      method: optional(formData.get("method")),
+      rating: rating.value,
+      brewedAt,
+    },
+    note,
+    hasNote: Object.values(note).some((field) => field !== null),
+  };
+}
+
+/** Kahve:su oranini "1:16" biciminde verir. */
+export function brewRatio(doseG: string | null, waterG: string | null): string | null {
+  if (!doseG || !waterG) return null;
+  const dose = Number(doseG);
+  const water = Number(waterG);
+  if (!dose || !water) return null;
+  return `1:${(water / dose).toFixed(1)}`;
+}
