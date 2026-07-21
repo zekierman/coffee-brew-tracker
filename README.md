@@ -1,42 +1,36 @@
-# ☕ Coffee Brew Tracker
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Coffee Brew Tracker, kahve demleme süreçlerini (yöntem, oran, süre) kayıt altında tutmak, her demlemeden sonra tadım notları ekleyerek ideal kahve lezzetine ulaşmak için geliştirilen React Native / Expo tabanlı bir mobil uygulamadır.
+## Getting Started
 
-Bu proje, 10 haftalık detaylı bir günlük plana sadık kalınarak adım adım inşa edilmektedir.
+First, run the development server:
 
----
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## 🎯 Projenin Amacı & Çözdüğü Problem
-Kağıt kalemle veya dağınık not uygulamalarında tutulan kahve tariflerini ve demleme geçmişini tek bir yerel veri tabanında (SQLite) düzenli bir şekilde toplar. Kullanıcının geçmiş demlemelerini analiz ederek daha tutarlı ve lezzetli kahveler yapmasına yardımcı olur.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
----
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 🛠️ Teknoloji Yığını (Tech Stack)
-- **Framework:** React Native + Expo (Expo Router ile dosya tabanlı navigasyon)
-- **Dil:** TypeScript
-- **Veri Tabanı:** SQLite (Yerel kalıcı veri)
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
----
+## Learn More
 
-## 📋 v1 MVP Özellikleri (İlk Sürüm Kapsamı)
-Uygulamanın ilk aşamasında aşağıdaki çekirdek özellikler yer alacaktır:
-- **Reçete Yönetimi (CRUD):** Reçete ekleme, listeleme, detay görüntüleme ve silme.
-- **Brew Session & Zamanlayıcı:** Saniye sayan, durdurulabilen ve demleme adımlarını gösteren dinamik timer.
-- **Tadım Notları & Puanlama:** Demleme sonrası kahvenin asidite, tatlılık, gövde gibi özelliklerini 1-5 arası puanlama.
-- **Demleme Geçmişi (History):** Geçmiş demleme kayıtlarını yeniden eskiye doğru inceleyebilme.
-- **Temel İstatistikler:** Ortalama puanlama ve en çok kullanılan demleme yönteminin analizi.
+To learn more about Next.js, take a look at the following resources:
 
----
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## ❌ v1 Kapsam Dışı Özellikler (Out of Scope)
-İlk sürümün odağını bozmamak adına AI önerileri, kullanıcı girişi (Auth) ve bulut senkronizasyonu (Cloud Sync) bu sürümde yer almayacaktır.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
----
+## Deploy on Vercel
 
-## 📂 Proje Klasör Yapısı
-Proje ilerledikçe kaynak kodlar aşağıdaki yapıda düzenlenecektir:
-- `/src/types`: TypeScript tip tanımlamaları.
-- `/src/utils`: Hesaplama ve istatistik helper fonksiyonları.
-- `/src/components`: Yeniden kullanılabilir arayüz bileşenleri.
-- `/src/db`: SQLite veri tabanı yönetim dosyaları.
-- `/notes`: Günlük incelemeler ve öğrenme notları.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
